@@ -7,15 +7,31 @@ const stats = [
   },
   {
     label: "65+ countries",
-    sub: "Studied across 5 — globally available from NL, CN & USA",
+    sub: "Studied across 5, traveled extensively across the rest",
   },
   {
     label: "4 corporate jobs",
-    sub: "Georgia Tech → Southwest Airlines → John Hancock → HousingAnywhere",
+    sub: "Southwest Airlines, John Hancock, HousingAnywhere, Vintus",
   },
   {
     label: "AI-native",
     sub: "Claude Code in daily development workflow",
+  },
+  {
+    label: "4 languages",
+    sub: "English, Dutch, Mandarin and Japanese",
+  },
+  {
+    label: "10+ core tools",
+    sub: "Python, SQL, dbt, Airflow, Snowflake, Azure, scikit-learn, OpenAI and more",
+  },
+  {
+    label: "3 service pillars",
+    sub: "Dashboards, forecasting and data pipelines",
+  },
+  {
+    label: "3 continents",
+    sub: "Based seasonally across the Netherlands, China and the USA",
   },
 ];
 
@@ -34,27 +50,24 @@ export default function About() {
             </h2>
             <div className="space-y-4 text-text-secondary leading-relaxed">
               <p>
-                I&apos;m Michael — a mathematician and engineer turned freelance
-                data scientist. I didn&apos;t plan to go this route. But
-                somewhere between developing space missions at Georgia Tech,
-                optimizing aircraft maintenance scheduling at Southwest
-                Airlines, and leading dashboard rollouts at HousingAnywhere
-                Rotterdam, I realized I was in love with data — not just
-                engineering.
+                I&apos;m Michael, a mathematician and engineer who found his way
+                into data. I optimized aircraft maintenance scheduling at
+                Southwest Airlines, worked in actuarial analytics at John
+                Hancock, and led revenue analytics at HousingAnywhere before
+                launching ML Ventures.
               </p>
               <p>
-                I hold a BS in Mathematics &amp; Aerospace Engineering and an
-                MS in Econometrics: Quantitative Finance (Erasmus). I&apos;ve
-                studied across 5 countries and traveled to 65+. I discovered
-                SQL at Southwest and never looked back.
+                I hold a BS in Mathematics and Aerospace Engineering and an MS
+                in Econometrics: Quantitative Finance from Erasmus. I&apos;ve
+                studied across 5 countries and traveled to 65+. SQL clicked for
+                me at Southwest and became the foundation of everything I build.
               </p>
               <p>
-                Now I help small businesses and startups turn messy data into
-                clear decisions — dashboards that actually get used, forecasting
-                models built on real business needs, and automation pipelines
-                that save hours every week. I combine technical depth (Python,
-                SQL, ML, Econometrics) with business context, and I&apos;m
-                fully AI-native in my workflow.
+                Today I help small businesses turn messy data into clear
+                decisions, through dashboards that get used, forecasting models
+                grounded in real business context, and pipelines that save hours
+                every week. I combine technical depth with business thinking,
+                and I&apos;m fully AI-native in how I work.
               </p>
             </div>
           </AnimatedSection>

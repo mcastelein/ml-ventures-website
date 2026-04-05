@@ -3,6 +3,17 @@ import ProjectCard from "@/components/ui/ProjectCard";
 
 const projects = [
   {
+    category: "Dev Tool, ML Ventures",
+    description:
+      "A premium Windows desktop launcher built for developers. One click opens a full 2×2 Windows Terminal layout, File Explorer, and any startup commands — all configured per project via a dark, theme-able PySide6 GUI.",
+    outcomes: [
+      "Instant project environment launch from a single click",
+      "Per-pane terminal paths and commands, drag-and-drop category management",
+      "Packaged as a standalone .exe with startup integration",
+    ],
+    tags: ["Python", "PySide6", "PyInstaller", "Windows Terminal"],
+  },
+  {
     category: "Revenue Analytics, HousingAnywhere",
     description:
       "Led a full reconciliation of HousingAnywhere's revenue data, repaired broken pipelines, and built the company's core revenue dashboard used by finance and leadership.",

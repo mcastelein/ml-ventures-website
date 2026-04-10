@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Pings — Custom Completion Sounds for Claude Code</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #030408;
+      --surface:   #060810;
+      --card:      #0a0e1e;
+      --border:    #0d1830;
+      --accent:    #00d4ff;
+      --text:      #e0f8ff;
+      --muted:     #4a9ab4;
+      --faint:     #142040;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -30vh;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 600px;
+      background: radial-gradient(ellipse at center, rgba(0,212,255,0.07) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 48px;
+      background: rgba(3,4,8,0.80);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(0,212,255,0.08);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      transition: color 0.2s;
+      min-width: 160px;
+    }
+    .nav-brand:hover { color: var(--text); }
+    .nav-brand-logo {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+
+    .nav-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .nav-logo span { color: var(--accent); }
+
+    .nav-badge {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      background: rgba(0,212,255,0.08);
+      border: 1px solid rgba(0,212,255,0.25);
+      border-radius: 20px;
+      padding: 5px 14px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 140px 24px 60px;
+      z-index: 1;
+    }
+
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(0,212,255,0.06);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 20px;
+      padding: 6px 18px;
+      margin-bottom: 28px;
+    }
+
+    .hero h1 {
+      font-size: clamp(36px, 6vw, 68px);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -1.5px;
+      max-width: 820px;
+      margin-bottom: 24px;
+    }
+    .hero h1 .glow {
+      color: var(--accent);
+      text-shadow: 0 0 30px rgba(0,212,255,0.5), 0 0 80px rgba(0,212,255,0.2);
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 560px;
+      margin-bottom: 44px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #020810;
+      font-size: 15px;
+      font-weight: 800;
+      padding: 14px 32px;
+      border-radius: 12px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.15s;
+      box-shadow: 0 0 24px rgba(0,212,255,0.35);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 0 40px rgba(0,212,255,0.55), 0 0 80px rgba(0,212,255,0.2);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 14px 24px;
+      border-radius: 12px;
+      border: 1px solid var(--faint);
+      text-decoration: none;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .btn-ghost:hover {
+      color: var(--text);
+      border-color: rgba(0,212,255,0.3);
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .divider {
+      max-width: 1060px;
+      margin: 0 auto;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+    }
+
+    /* ── Section ── */
+    section {
+      position: relative;
+      z-index: 1;
+      padding: 80px 24px;
+    }
+
+    .section-inner {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 900;
+      letter-spacing: -0.8px;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .section-sub {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 48px;
+      text-align: center;
+    }
+
+    /* ── Ping Cards ── */
+    .ping-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .ping-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .ping-card:hover {
+      border-color: rgba(0,212,255,0.3);
+      box-shadow: 0 0 30px rgba(0,212,255,0.06);
+    }
+    .ping-card.playing {
+      border-color: var(--accent);
+      box-shadow: 0 0 24px rgba(0,212,255,0.2);
+    }
+
+    .ping-name {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .ping-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .ping-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .ping-tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--accent);
+      background: rgba(0,212,255,0.06);
+      border: 1px solid rgba(0,212,255,0.15);
+      border-radius: 6px;
+      padding: 3px 8px;
+    }
+
+    .ping-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .ping-play, .ping-download {
+      flex: 1;
+      padding: 10px 0;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .ping-play {
+      background: rgba(0,212,255,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(0,212,255,0.2);
+    }
+    .ping-play:hover {
+      background: rgba(0,212,255,0.2);
+      box-shadow: 0 0 12px rgba(0,212,255,0.15);
+    }
+
+    .ping-download {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--faint);
+    }
+    .ping-download:hover {
+      border-color: var(--accent);
+    }
+
+    /* ── Random Section ── */
+    .random-section {
+      text-align: center;
+      padding: 40px 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      margin-bottom: 32px;
+    }
+
+    .random-section h3 {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .random-section p {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .random-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .random-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .random-generate {
+      background: var(--accent);
+      color: #020810;
+      box-shadow: 0 0 20px rgba(0,212,255,0.3);
+    }
+    .random-generate:hover {
+      box-shadow: 0 0 36px rgba(0,212,255,0.5);
+      transform: translateY(-1px);
+    }
+
+    .random-dl {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--faint);
+    }
+    .random-dl:hover { border-color: var(--accent); }
+
+    .random-preview {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 20px;
+    }
+    .random-preview span { color: var(--accent); font-weight: 700; }
+
+    /* ── Setup ── */
+    .setup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .steps-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .steps-list li {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,212,255,0.3);
+      background: rgba(0,212,255,0.05);
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-text { font-size: 14px; color: var(--muted); padding-top: 4px; }
+    .step-text strong { color: var(--text); }
+
+    .code-block {
+      background: #020508;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 13px;
+      color: var(--accent);
+      overflow-x: auto;
+      margin: 12px 0;
+      position: relative;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .code-block .comment { color: var(--muted); }
+
+    .copy-btn {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: var(--card);
+      border: 1px solid var(--faint);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+
+    /* ── Footer ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 32px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    footer p { font-size: 13px; color: var(--muted); }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    @media (max-width: 600px) {
+      nav { padding: 14px 20px; }
+      .ping-grid { grid-template-columns: 1fr !important; }
+      footer { flex-direction: column; gap: 8px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a href="https://mlventures.agency" class="nav-brand" target="_blank">
+      <img src="/ml_ventures_logo.jpg" alt="ML Ventures" class="nav-brand-logo" />
+      <span>ML Ventures</span>
+    </a>
+    <div class="nav-logo">Claude<span>Pings</span></div>
+    <div class="nav-badge">FREE TOOL</div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-eyebrow">Claude Code Sounds</div>
+    <h1>Make Claude Code<br><span class="glow">sound like you.</span></h1>
+    <p class="hero-sub">
+      Pick a completion sound for Claude Code. Preview, download, and set it up in under a minute.
+    </p>
+    <div class="cta-group">
+      <a href="#pings" class="btn-primary">Browse Pings</a>
+      <a href="#setup" class="btn-ghost">How to set it up</a>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Pings -->
+  <section id="pings">
+    <div class="section-inner">
+      <div class="section-label">Pick a Ping</div>
+      <h2 class="section-title">Pre-made and ready to go.</h2>
+      <p class="section-sub">Click play to preview, then download the one you like.</p>
+
+      <div class="ping-grid" id="pingGrid"></div>
+
+      <!-- Randomizer -->
+      <div class="random-section">
+        <h3>Want something unique?</h3>
+        <p>Generate a random ping. Hit it until you find one you like.</p>
+        <div class="random-actions">
+          <button class="random-btn random-generate" id="randomBtn">&#127922;&nbsp; Randomize</button>
+          <button class="random-btn random-dl" id="randomDlBtn" style="display:none">&#8595;&nbsp; Download this one</button>
+        </div>
+        <div class="random-preview" id="randomPreview"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Setup -->
+  <section id="setup">
+    <div class="section-inner">
+      <div class="section-label">Setup</div>
+      <h2 class="section-title">Use it with Claude Code.</h2>
+      <p class="section-sub">Three steps to hear your ping after every task.</p>
+
+      <div class="setup-card">
+        <ol class="steps-list">
+          <li>
+            <div class="step-num">1</div>
+            <div class="step-text"><strong>Download</strong> a ping from above.</div>
+          </li>
+          <li>
+            <div class="step-num">2</div>
+            <div class="step-text"><strong>Save it</strong> somewhere permanent, like:
+              <div class="code-block">C:\Users\YourName\.claude\my_ping.wav<button class="copy-btn" onclick="copyText(this, 'C:\\Users\\YourName\\.claude\\my_ping.wav')">Copy</button></div>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">3</div>
+            <div class="step-text"><strong>Add a hook</strong> to <code style="color:var(--accent)">~/.claude/settings.json</code>:
+              <div class="code-block"><button class="copy-btn" onclick="copyBlock(this)">Copy</button><span class="comment">// Add inside settings.json</span>
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -Command \"(New-Object Media.SoundPlayer 'C:\\Users\\YourName\\.claude\\my_ping.wav').PlaySync()\""
+          }
+        ]
+      }
+    ]
+  }
+}</div>
+            </div>
+          </li>
+        </ol>
+        <p style="margin-top:20px;font-size:13px;color:var(--muted)">
+          That's it. Every time Claude Code finishes a task, your custom ping plays.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>Claude<span style="color:var(--accent)">Pings</span> &middot; Built by <a href="https://mlventures.agency">ML Ventures</a></p>
+    <p>Free tool &middot; No account needed</p>
+  </footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CLAUDE PINGS — Synthesizer
+// ═══════════════════════════════════════════════════════════════
+
+const SR = 44100;
+let audioCtx = null;
+let lastRandomAudio = null;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+// ── Core synthesis helpers ──
+function softClip(s, gain) { return Math.tanh(s * gain) * 0.7; }
+
+function brightNote(freq, dur) {
+  const n = Math.floor(SR * dur), out = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const t = i / SR;
+    const env = Math.min(1, t * 40) * Math.exp(-t * 3);
+    const sig = 0.5*Math.sin(2*Math.PI*freq*t) + 0.25*Math.sin(2*Math.PI*freq*2*t)
+              + 0.1*Math.sin(2*Math.PI*freq*3*t) + 0.08*Math.sin(2*Math.PI*freq*4*t);
+    out[i] = softClip(sig * env, 2.5);
+  }
+  return out;
+}
+
+function chimeNote(freq, dur) {
+  const n = Math.floor(SR * dur), out = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const t = i / SR;
+    const env = Math.exp(-t * 5);
+    out[i] = (0.4*Math.sin(2*Math.PI*freq*t) + 0.3*Math.sin(2*Math.PI*freq*2*t)
+            + 0.2*Math.sin(2*Math.PI*freq*3*t) + 0.1*Math.sin(2*Math.PI*freq*5.04*t)) * env * 0.5;
+  }
+  return out;
+}
+
+function retroNote(freq, dur) {
+  const n = Math.floor(SR * dur), out = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const t = i / SR;
+    const env = Math.min(1, t * 80) * Math.exp(-t * 5);
+    out[i] = (Math.sign(Math.sin(2*Math.PI*freq*t))*0.3 + Math.sign(Math.sin(2*Math.PI*freq*2*t))*0.15) * env;
+  }
+  return out;
+}
+
+function softNote(freq, dur) {
+  const n = Math.floor(SR * dur), out = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const t = i / SR;
+    const env = Math.min(1, t * 8) * Math.exp(-t * 1.5);
+    out[i] = (0.6*Math.sin(2*Math.PI*freq*t) + 0.2*Math.sin(2*Math.PI*freq*2*t)) * env * 0.6;
+  }
+  return out;
+}
+
+function pluckNote(freq, dur) {
+  const n = Math.floor(SR * dur), out = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const t = i / SR;
+    const env = Math.min(1, t * 100) * Math.exp(-t * 8);
+    out[i] = (0.5*Math.sin(2*Math.PI*freq*t) + 0.3*Math.sin(2*Math.PI*freq*2*t)
+            + 0.15*Math.sin(2*Math.PI*freq*3*t)) * env;
+  }
+  return out;
+}
+
+function kick() {
+  const n = Math.floor(SR * 0.08), out = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const t = i / SR;
+    out[i] = Math.sin(2*Math.PI*(120*Math.exp(-t*40))*t) * Math.exp(-t*30) * 0.3;
+  }
+  return out;
+}
+
+function hihat() {
+  const n = Math.floor(SR * 0.04), out = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const t = i / SR;
+    out[i] = (Math.random()*2-1) * Math.exp(-t*60) * 0.12;
+  }
+  return out;
+}
+
+const SYNTHS = { bright: brightNote, chime: chimeNote, retro: retroNote, soft: softNote, pluck: pluckNote };
+
+function mixAt(target, source, offset) {
+  for (let i = 0; i < source.length; i++) {
+    const idx = offset + i;
+    if (idx < target.length) target[idx] += source[i];
+  }
+}
+
+// ── Build a ping from a recipe ──
+function buildPing(recipe) {
+  const total = Math.floor(SR * recipe.duration);
+  const audio = new Float32Array(total);
+  const synth = SYNTHS[recipe.style] || brightNote;
+
+  recipe.notes.forEach(([freq, startTime, noteDur]) => {
+    mixAt(audio, synth(freq, noteDur), Math.floor(startTime * SR));
+  });
+
+  if (recipe.chimes) {
+    recipe.chimes.forEach(([freq, startTime, dur]) => {
+      mixAt(audio, chimeNote(freq, dur), Math.floor(startTime * SR));
+    });
+  }
+
+  if (recipe.perc) {
+    recipe.perc.kicks.forEach(t => mixAt(audio, kick(), Math.floor(t * SR)));
+    recipe.perc.hats.forEach(t => mixAt(audio, hihat(), Math.floor(t * SR)));
+  }
+
+  // Normalize
+  let peak = 0;
+  for (let i = 0; i < total; i++) peak = Math.max(peak, Math.abs(audio[i]));
+  if (peak > 0) {
+    const vol = (recipe.volume || 0.35);
+    for (let i = 0; i < total; i++) audio[i] = (audio[i] / peak) * vol;
+  }
+
+  return audio;
+}
+
+// ── Pre-made pings ──
+const PINGS = [
+  {
+    name: 'Rock Riff',
+    desc: 'The original. Bouncy ascending riff with percussion and sparkle chimes.',
+    tags: ['upbeat', 'guitar', 'percussion'],
+    recipe: {
+      style: 'bright', duration: 1.5, volume: 0.35,
+      notes: [[329.6,0,0.15],[392,0.12,0.15],[493.9,0.24,0.15],[587.3,0.36,0.15],[659.3,0.5,0.6]],
+      chimes: [[1318.5,0.52,0.4],[1568,0.6,0.3]],
+      perc: { kicks:[0,0.12,0.24,0.36,0.5], hats:[0.06,0.18,0.30,0.42] }
+    }
+  },
+  {
+    name: 'Gentle Bell',
+    desc: 'Soft bell chimes ascending. Calm and unobtrusive.',
+    tags: ['calm', 'chime', 'minimal'],
+    recipe: {
+      style: 'chime', duration: 1.8, volume: 0.3,
+      notes: [[523.3,0,0.5],[659.3,0.25,0.5],[784,0.5,0.8]],
+      chimes: [[1568,0.55,0.5]],
+      perc: null
+    }
+  },
+  {
+    name: 'Retro Coin',
+    desc: 'Quick 8-bit coin pickup. Short and satisfying.',
+    tags: ['retro', '8-bit', 'short'],
+    recipe: {
+      style: 'retro', duration: 0.6, volume: 0.35,
+      notes: [[659.3,0,0.1],[784,0.08,0.1],[1046.5,0.16,0.3]],
+      chimes: null,
+      perc: null
+    }
+  },
+  {
+    name: 'Arcade Win',
+    desc: 'Classic game victory fanfare. Fast ascending scale.',
+    tags: ['retro', 'fun', 'upbeat'],
+    recipe: {
+      style: 'retro', duration: 1.0, volume: 0.35,
+      notes: [[261.6,0,0.08],[329.6,0.07,0.08],[392,0.14,0.08],[523.3,0.21,0.08],[659.3,0.3,0.1],[784,0.38,0.4]],
+      chimes: null,
+      perc: { kicks:[0,0.14,0.3], hats:[0.07,0.21,0.38] }
+    }
+  },
+  {
+    name: 'Soft Landing',
+    desc: 'Warm pad tones. Long and ambient.',
+    tags: ['ambient', 'warm', 'long'],
+    recipe: {
+      style: 'soft', duration: 2.5, volume: 0.3,
+      notes: [[392,0,0.8],[493.9,0.3,0.8],[587.3,0.6,1.0],[784,1.2,1.0]],
+      chimes: [[1568,1.3,0.6]],
+      perc: null
+    }
+  },
+  {
+    name: 'Pluck Funk',
+    desc: 'Snappy plucked notes with a groove.',
+    tags: ['funky', 'pluck', 'percussion'],
+    recipe: {
+      style: 'pluck', duration: 1.2, volume: 0.35,
+      notes: [[329.6,0,0.1],[329.6,0.08,0.1],[392,0.2,0.1],[440,0.28,0.1],[493.9,0.4,0.15],[587.3,0.55,0.15],[659.3,0.7,0.3]],
+      chimes: null,
+      perc: { kicks:[0,0.2,0.4,0.55], hats:[0.08,0.28,0.7] }
+    }
+  },
+  {
+    name: 'Crystal',
+    desc: 'Ethereal ascending chimes. Pure and clear.',
+    tags: ['chime', 'clean', 'bright'],
+    recipe: {
+      style: 'chime', duration: 1.5, volume: 0.3,
+      notes: [[659.3,0,0.3],[784,0.15,0.3],[1046.5,0.3,0.4],[1318.5,0.5,0.6]],
+      chimes: [[2093,0.55,0.4],[2637,0.65,0.3]],
+      perc: null
+    }
+  },
+  {
+    name: 'Mission Complete',
+    desc: 'Two-part fanfare. Dramatic pause then resolution.',
+    tags: ['dramatic', 'guitar', 'satisfying'],
+    recipe: {
+      style: 'bright', duration: 1.8, volume: 0.35,
+      notes: [[392,0,0.12],[493.9,0.1,0.12],[587.3,0.2,0.25],[659.3,0.7,0.15],[784,0.82,0.15],[1046.5,0.95,0.6]],
+      chimes: [[2093,1.0,0.4]],
+      perc: { kicks:[0,0.1,0.2,0.7,0.95], hats:[0.05,0.15,0.82] }
+    }
+  },
+  {
+    name: 'Zen Drop',
+    desc: 'A single clean tone that blooms and fades. Minimal and peaceful.',
+    tags: ['minimal', 'calm', 'clean'],
+    recipe: {
+      style: 'soft', duration: 1.6, volume: 0.3,
+      notes: [[523.3,0,0.6],[784,0.15,0.8],[1046.5,0.4,1.0]],
+      chimes: [[2093,0.45,0.6],[1568,0.55,0.5]],
+      perc: null
+    }
+  },
+];
+
+// ── Build ping cards ──
+function buildCards() {
+  const grid = document.getElementById('pingGrid');
+  grid.innerHTML = '';
+
+  PINGS.forEach((ping, idx) => {
+    const card = document.createElement('div');
+    card.className = 'ping-card';
+    card.innerHTML = `
+      <div class="ping-name">${ping.name}</div>
+      <div class="ping-desc">${ping.desc}</div>
+      <div class="ping-tags">${ping.tags.map(t => `<span class="ping-tag">${t}</span>`).join('')}</div>
+      <div class="ping-actions">
+        <button class="ping-play" data-idx="${idx}">&#9654; Play</button>
+        <button class="ping-download" data-idx="${idx}">&#8595; Download</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Event listeners
+  grid.querySelectorAll('.ping-play').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ping = PINGS[parseInt(btn.dataset.idx)];
+      const audio = buildPing(ping.recipe);
+      playBuffer(audio);
+      // Highlight card
+      document.querySelectorAll('.ping-card').forEach(c => c.classList.remove('playing'));
+      btn.closest('.ping-card').classList.add('playing');
+      setTimeout(() => btn.closest('.ping-card').classList.remove('playing'), ping.recipe.duration * 1000 + 200);
+    });
+  });
+
+  grid.querySelectorAll('.ping-download').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ping = PINGS[parseInt(btn.dataset.idx)];
+      const audio = buildPing(ping.recipe);
+      downloadWav(audio, ping.name.toLowerCase().replace(/\s+/g, '_') + '.wav');
+    });
+  });
+}
+
+// ── Playback ──
+function playBuffer(audioData) {
+  ensureAudio();
+  const buffer = audioCtx.createBuffer(1, audioData.length, SR);
+  buffer.getChannelData(0).set(audioData);
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(audioCtx.destination);
+  source.start();
+}
+
+// ── WAV export ──
+function audioToWav(audioData) {
+  const len = audioData.length * 2;
+  const buf = new ArrayBuffer(44 + len);
+  const v = new DataView(buf);
+  const writeStr = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o+i, s.charCodeAt(i)); };
+  writeStr(0,'RIFF'); v.setUint32(4,36+len,true); writeStr(8,'WAVE');
+  writeStr(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,SR,true); v.setUint32(28,SR*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true);
+  writeStr(36,'data'); v.setUint32(40,len,true);
+  for (let i = 0; i < audioData.length; i++) v.setInt16(44+i*2, Math.max(-1,Math.min(1,audioData[i]))*32767, true);
+  return new Blob([buf], {type:'audio/wav'});
+}
+
+function downloadWav(audioData, filename) {
+  const blob = audioToWav(audioData);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Randomizer ──
+const SCALE_FREQS = [261.6,293.7,329.6,349.2,392,440,493.9,523.3,587.3,659.3,698.5,784,1046.5,1318.5];
+const STYLES = ['bright','chime','retro','soft','pluck'];
+const FEEL_NAMES = ['bright','chime','retro','soft','pluck'];
+
+function randomPing() {
+  const style = STYLES[Math.floor(Math.random() * STYLES.length)];
+  const noteCount = 3 + Math.floor(Math.random() * 5); // 3-7 notes
+  const duration = 0.6 + Math.random() * 1.4; // 0.6-2.0s
+  const stepTime = duration / (noteCount + 1);
+  const usePerc = Math.random() > 0.5;
+  const useChimes = Math.random() > 0.5 && style !== 'retro';
+
+  // Build ascending-ish melody
+  let baseIdx = 2 + Math.floor(Math.random() * 4); // start somewhere in the middle
+  const notes = [];
+  const kicks = [];
+  const hats = [];
+
+  for (let i = 0; i < noteCount; i++) {
+    const t = i * stepTime;
+    const freq = SCALE_FREQS[Math.min(baseIdx, SCALE_FREQS.length - 1)];
+    const noteDur = Math.min(stepTime * 2.5, duration - t);
+    notes.push([freq, t, noteDur]);
+
+    // Tend upward with occasional dips
+    baseIdx += Math.random() > 0.25 ? (1 + Math.floor(Math.random() * 2)) : -1;
+    baseIdx = Math.max(0, Math.min(baseIdx, SCALE_FREQS.length - 1));
+
+    if (usePerc && i % 2 === 0) kicks.push(t);
+    if (usePerc && i % 2 === 1) hats.push(t);
+  }
+
+  const chimes = [];
+  if (useChimes && notes.length > 0) {
+    const lastNote = notes[notes.length - 1];
+    chimes.push([lastNote[0] * 2, lastNote[1] + 0.03, 0.35]);
+  }
+
+  const recipe = {
+    style, duration, volume: 0.35,
+    notes,
+    chimes: useChimes ? chimes : null,
+    perc: usePerc ? { kicks, hats } : null,
+  };
+
+  return { recipe, style, noteCount, usePerc, useChimes };
+}
+
+document.getElementById('randomBtn').addEventListener('click', () => {
+  const { recipe, style, noteCount, usePerc, useChimes } = randomPing();
+  lastRandomAudio = buildPing(recipe);
+  playBuffer(lastRandomAudio);
+
+  const tags = [style, noteCount + ' notes'];
+  if (usePerc) tags.push('percussion');
+  if (useChimes) tags.push('chimes');
+  document.getElementById('randomPreview').innerHTML = '<span>' + tags.join(' &middot; ') + '</span>';
+  document.getElementById('randomDlBtn').style.display = 'inline-flex';
+});
+
+document.getElementById('randomDlBtn').addEventListener('click', () => {
+  if (lastRandomAudio) downloadWav(lastRandomAudio, 'claude_ping_random.wav');
+});
+
+// ── Copy helpers ──
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text);
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = 'Copy', 1500);
+}
+
+function copyBlock(btn) {
+  const block = btn.parentElement;
+  const text = block.textContent.replace('Copy','').replace('Copied!','').trim();
+  navigator.clipboard.writeText(text);
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = 'Copy', 1500);
+}
+
+// ── Init ──
+buildCards();
+</script>
+
+</body>
+</html>

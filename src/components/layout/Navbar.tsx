@@ -33,7 +33,7 @@ export default function Navbar() {
     >
       <div className="max-w-6xl mx-auto px-6 h-[72px] flex items-center justify-between">
         {/* Logo */}
-        <a href="#home" className="flex items-center gap-2.5">
+        <a href="/" className="flex items-center gap-2.5">
           <Image
             src="/ml_ventures_logo.jpg"
             alt="ML Ventures"

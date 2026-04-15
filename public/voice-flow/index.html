@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VoiceFlow | Voice-to-Text That Stays on Your Machine</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #030408;
+      --surface:   #060810;
+      --card:      #0a0e1e;
+      --border:    #0d1830;
+      --accent:    #00d4ff;
+      --accent2:   #0088aa;
+      --text:      #e0f8ff;
+      --muted:     #4a9ab4;
+      --faint:     #142040;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -30vh;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 600px;
+      background: radial-gradient(ellipse at center, rgba(0,212,255,0.07) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Nav */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 48px;
+      background: rgba(2,5,8,0.80);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(0,212,255,0.08);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      transition: color 0.2s;
+      min-width: 160px;
+    }
+    .nav-brand:hover { color: var(--text); }
+    .nav-brand-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+
+    .nav-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: var(--text);
+    }
+    .nav-logo span { color: var(--accent); }
+
+    .nav-badge {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      background: rgba(0,212,255,0.08);
+      border: 1px solid rgba(0,212,255,0.25);
+      border-radius: 20px;
+      padding: 5px 14px;
+    }
+
+    /* Hero */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      z-index: 1;
+    }
+
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(0,212,255,0.06);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 20px;
+      padding: 6px 18px;
+      margin-bottom: 28px;
+    }
+
+    .hero h1 {
+      font-size: clamp(42px, 7vw, 80px);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -1.5px;
+      max-width: 820px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 .glow {
+      color: var(--accent);
+      text-shadow: 0 0 30px rgba(0,212,255,0.5), 0 0 80px rgba(0,212,255,0.2);
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 540px;
+      margin-bottom: 44px;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #020810;
+      font-size: 15px;
+      font-weight: 800;
+      padding: 14px 32px;
+      border-radius: 12px;
+      text-decoration: none;
+      letter-spacing: 0.3px;
+      transition: box-shadow 0.2s, transform 0.15s;
+      box-shadow: 0 0 24px rgba(0,212,255,0.35);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 0 40px rgba(0,212,255,0.55), 0 0 80px rgba(0,212,255,0.2);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 14px 24px;
+      border-radius: 12px;
+      border: 1px solid var(--faint);
+      text-decoration: none;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .btn-ghost:hover {
+      color: var(--text);
+      border-color: rgba(0,212,255,0.3);
+    }
+
+    .hero-free-note {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .hero-free-note strong { color: var(--accent); }
+
+    /* Mockup */
+    .mockup-wrap {
+      position: relative;
+      margin: 60px auto 0;
+      max-width: 480px;
+      width: 100%;
+    }
+
+    .mockup-glow {
+      position: absolute;
+      inset: -40px;
+      background: radial-gradient(ellipse at 50% 60%, rgba(0,212,255,0.12) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .mockup {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,212,255,0.06);
+    }
+
+    .mockup-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px;
+      background: rgba(6,10,20,0.9);
+      border-bottom: 1px solid var(--border);
+    }
+    .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mockup-dot.r { background: #ff5f57; }
+    .mockup-dot.y { background: #febc2e; }
+    .mockup-dot.g { background: #28c840; }
+    .mockup-title {
+      margin-left: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .mockup-title span { color: var(--accent); }
+
+    .mockup-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 320px;
+    }
+
+    .mockup-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: rgba(0,212,255,0.06);
+      border: 1px solid rgba(0,212,255,0.15);
+      border-radius: 10px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #28c840;
+      box-shadow: 0 0 8px rgba(40,200,64,0.4);
+    }
+
+    .status-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .mockup-transcript {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .transcript-line {
+      padding: 10px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .transcript-time {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .mockup-hotkey {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: auto;
+      padding: 10px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    kbd {
+      display: inline-block;
+      padding: 3px 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: 'Consolas', monospace;
+      font-size: 11px;
+      color: var(--accent);
+    }
+
+    /* Section */
+    section {
+      position: relative;
+      z-index: 1;
+      padding: 100px 24px;
+    }
+
+    .section-inner {
+      max-width: 1060px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 900;
+      letter-spacing: -0.8px;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .section-sub {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 520px;
+      margin-bottom: 56px;
+    }
+
+    /* Feature grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .feature-card:hover {
+      border-color: rgba(0,212,255,0.3);
+      box-shadow: 0 0 30px rgba(0,212,255,0.06);
+    }
+
+    .feature-icon {
+      font-size: 26px;
+      margin-bottom: 14px;
+      line-height: 1;
+    }
+
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* How it works */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0;
+      position: relative;
+    }
+
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: 10%;
+      right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.25;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0 24px;
+      gap: 14px;
+    }
+
+    .step-num {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,212,255,0.3);
+      background: rgba(0,212,255,0.05);
+      color: var(--accent);
+      font-size: 20px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(0,212,255,0.1);
+      flex-shrink: 0;
+    }
+
+    .step h3 {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .step p {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Comparison table */
+    .compare-table {
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
+      border-collapse: collapse;
+    }
+
+    .compare-table th,
+    .compare-table td {
+      padding: 14px 20px;
+      text-align: left;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .compare-table th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .compare-table td:first-child {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .compare-table .vf { color: var(--accent); font-weight: 700; }
+    .compare-table .wf { color: var(--muted); }
+
+    .check { color: #28c840; }
+    .cross { color: #ff5f57; }
+
+    /* Model strip */
+    .model-strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 40px;
+    }
+
+    .model-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 30px;
+      border: 1px solid var(--faint);
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .model-pill.featured {
+      border-color: rgba(0,212,255,0.3);
+      color: var(--accent);
+    }
+
+    /* Free banner */
+    .free-banner {
+      text-align: center;
+      padding: 100px 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .free-banner::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 700px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(0,212,255,0.09) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .free-tag {
+      display: inline-block;
+      font-size: 72px;
+      font-weight: 900;
+      color: var(--accent);
+      text-shadow: 0 0 40px rgba(0,212,255,0.5), 0 0 100px rgba(0,212,255,0.2);
+      letter-spacing: -2px;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+
+    .free-banner h2 {
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 900;
+      margin-bottom: 14px;
+      letter-spacing: -0.6px;
+    }
+
+    .free-banner p {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 440px;
+      margin: 0 auto 40px;
+    }
+
+    /* Divider */
+    .divider {
+      max-width: 1060px;
+      margin: 0 auto;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+    }
+
+    /* Footer */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 32px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    footer p {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    footer p span { color: var(--accent); }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a href="https://mlventures.agency" class="nav-brand" target="_blank">
+      <img src="assets/ml_ventures_logo.jpg" alt="ML Ventures" class="nav-brand-logo" />
+      <span>ML Ventures</span>
+    </a>
+    <div class="nav-logo">Voice<span>Flow</span></div>
+    <div class="nav-badge">FREE &amp; OPEN SOURCE</div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-eyebrow">Windows Voice-to-Text</div>
+    <h1>Speak. Paste.<br><span class="glow">Done.</span></h1>
+    <p class="hero-sub">
+      Voice-to-text that runs entirely on your machine.
+      Private, fast, and free. No cloud, no account, no subscriptions.
+    </p>
+    <div class="cta-group">
+      <a href="#" class="btn-primary">
+        ↓ &nbsp;Download for Windows
+      </a>
+      <a href="#features" class="btn-ghost">See how it works</a>
+    </div>
+    <p class="hero-free-note"><strong>100% free.</strong> Open source. Your audio never leaves your computer.</p>
+
+    <!-- App mockup -->
+    <div class="mockup-wrap">
+      <div class="mockup-glow"></div>
+      <div class="mockup">
+        <div class="mockup-bar">
+          <div class="mockup-dot r"></div>
+          <div class="mockup-dot y"></div>
+          <div class="mockup-dot g"></div>
+          <div class="mockup-title">Voice<span>Flow</span></div>
+        </div>
+        <div class="mockup-body">
+          <div class="mockup-status">
+            <div class="status-dot"></div>
+            <div class="status-text">Listening...</div>
+          </div>
+          <div class="mockup-transcript">
+            <div class="transcript-line">
+              <div class="transcript-time">12:04 PM</div>
+              Hey team, the updated API docs are in the shared drive. Let me know if anything looks off.
+            </div>
+            <div class="transcript-line">
+              <div class="transcript-time">12:03 PM</div>
+              Remind me to review the pull request from Sarah before the standup tomorrow morning.
+            </div>
+            <div class="transcript-line">
+              <div class="transcript-time">12:01 PM</div>
+              Note to self: pick up groceries on the way home.
+            </div>
+          </div>
+          <div class="mockup-hotkey">
+            Hold <kbd>Ctrl</kbd> + <kbd>Win</kbd> to speak
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="section-inner">
+      <div class="section-label">Features</div>
+      <h2 class="section-title">Your voice, your machine.<br>No cloud required.</h2>
+      <p class="section-sub">Hold a hotkey, say what you need, and the text appears wherever your cursor is. That's it.</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🎤</div>
+          <h3>Push-to-talk dictation</h3>
+          <p>Hold your hotkey and speak. Release to transcribe. Text gets pasted right where your cursor is, in any app.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>100% local processing</h3>
+          <p>All transcription happens on your machine. No audio is sent anywhere. Your conversations stay yours.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🧠</div>
+          <h3>13 Whisper models</h3>
+          <p>From tiny (instant results) to large-v3 (max accuracy), plus Distil-Whisper for the best speed-to-quality ratio.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>GPU accelerated</h3>
+          <p>Auto-detects your NVIDIA GPU for fast transcription. No GPU? Falls back to CPU automatically.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📝</div>
+          <h3>Transcription history</h3>
+          <p>Every transcription is saved. Copy, delete, or scroll back through everything you've dictated.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⌨️</div>
+          <h3>Customizable hotkeys</h3>
+          <p>Set your own push-to-talk key combo. Toggle hands-free mode when you want to dictate without holding anything.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- How it works -->
+  <section>
+    <div class="section-inner">
+      <div class="section-label">How it works</div>
+      <h2 class="section-title">Up and running in 30 seconds.</h2>
+      <p class="section-sub">No installer. No account. No setup wizard.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Download</h3>
+          <p>Grab VoiceFlow.zip from GitHub. Extract it anywhere.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Run</h3>
+          <p>Double-click VoiceFlow.exe. Pick a Whisper model on first launch.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Speak</h3>
+          <p>Hold <kbd>Ctrl</kbd> + <kbd>Win</kbd> and talk. Release and the text appears at your cursor.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <h3>Paste</h3>
+          <p>That's it. Works in any app. Email, Slack, your code editor, anywhere.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Comparison -->
+  <section id="compare">
+    <div class="section-inner" style="text-align:center;">
+      <div class="section-label">Compare</div>
+      <h2 class="section-title">The free alternative to Wispr Flow.</h2>
+      <p class="section-sub" style="margin-left:auto;margin-right:auto;">Same idea, different approach. VoiceFlow keeps everything local and costs nothing.</p>
+
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="vf">VoiceFlow</th>
+            <th class="wf">Wispr Flow</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Price</td>
+            <td class="vf">Free forever</td>
+            <td>$8-12/month</td>
+          </tr>
+          <tr>
+            <td>Privacy</td>
+            <td class="vf"><span class="check">&#10003;</span> 100% local</td>
+            <td><span class="cross">&#10007;</span> Cloud-based</td>
+          </tr>
+          <tr>
+            <td>Open source</td>
+            <td class="vf"><span class="check">&#10003;</span> Yes</td>
+            <td><span class="cross">&#10007;</span> Closed source</td>
+          </tr>
+          <tr>
+            <td>Account required</td>
+            <td class="vf"><span class="check">&#10003;</span> None</td>
+            <td><span class="cross">&#10007;</span> Required</td>
+          </tr>
+          <tr>
+            <td>Model options</td>
+            <td class="vf">13 models</td>
+            <td>1 (their API)</td>
+          </tr>
+          <tr>
+            <td>GPU acceleration</td>
+            <td class="vf"><span class="check">&#10003;</span> CUDA + CPU fallback</td>
+            <td>N/A (cloud)</td>
+          </tr>
+          <tr>
+            <td>Works offline</td>
+            <td class="vf"><span class="check">&#10003;</span> Yes</td>
+            <td><span class="cross">&#10007;</span> No</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Models -->
+  <section id="models">
+    <div class="section-inner">
+      <div class="section-label">Models</div>
+      <h2 class="section-title">Pick your balance of speed and accuracy.</h2>
+      <p class="section-sub">13 Whisper models available out of the box. Downloaded on first use, stored locally.</p>
+
+      <div class="model-strip">
+        <div class="model-pill">tiny</div>
+        <div class="model-pill">tiny.en</div>
+        <div class="model-pill">base</div>
+        <div class="model-pill">base.en</div>
+        <div class="model-pill">small</div>
+        <div class="model-pill">small.en</div>
+        <div class="model-pill featured">medium</div>
+        <div class="model-pill featured">medium.en</div>
+        <div class="model-pill featured">distil-medium.en</div>
+        <div class="model-pill featured">distil-large-v3</div>
+        <div class="model-pill">large-v2</div>
+        <div class="model-pill">large-v3</div>
+        <div class="model-pill featured">large-v3-turbo</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Free CTA -->
+  <div class="free-banner">
+    <div class="free-tag">Free.</div>
+    <h2>No subscriptions. No cloud. No catch.</h2>
+    <p>VoiceFlow is free to download, free to use, and yours to keep. Open source, forever.</p>
+    <div class="cta-group" style="justify-content:center">
+      <a href="#" class="btn-primary">↓ &nbsp;Download for Windows</a>
+      <a href="#" class="btn-ghost">View on GitHub</a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>Voice<span>Flow</span> &nbsp;·&nbsp; Built by <a href="https://mlventures.agency" style="color:var(--accent);text-decoration:none;">ML Ventures</a></p>
+    <p>Free &amp; open source &nbsp;·&nbsp; Windows 10 / 11</p>
+  </footer>
+
+</body>
+</html>
